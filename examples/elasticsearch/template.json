@@ -1,0 +1,53 @@
+{
+  "index_patterns": [
+    "filebeat*"
+  ],
+  "priority": 0,
+  "version": 0,
+  "template": {
+    "mappings": {
+      "properties":
+      {
+        "port": {
+          "type": "integer",
+          "store": false,
+          "index": true,
+          "doc_values": true
+        },
+        "user_id": {
+          "type": "keyword",
+          "store": false,
+          "index": true,
+          "doc_values": true,
+          "norms": false
+        }
+      }
+      ,
+      "dynamic_templates": [
+        {
+          "strings": {
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "{dynamic_type}",
+              "store": false,
+              "index": false,
+              "doc_values": false,
+              "norms": false
+            }
+          }
+        },
+        {
+          "all": {
+            "match_mapping_type": "*",
+            "mapping": {
+              "type": "{dynamic_type}",
+              "store": false,
+              "index": false,
+              "doc_values": false
+            }
+          }
+        }
+      ]
+    }
+  }
+}

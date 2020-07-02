@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package observability.schema;
+//option go_package = "github.com/melchiormoulin/observability-schema/schema/elasticsearch";
+
+message ElasticsearchField  {
+    string type = 1; //all others type than keyword or text
+    bool store = 2;
+    bool index= 3;
+    bool doc_values= 4;
+}
+message ElasticsearchFieldString {
+    string type = 1; //keyword or text
+    bool store = 2;
+    bool index= 3;
+    bool doc_values= 4;
+    bool norms = 5;
+}
+

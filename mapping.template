@@ -1,0 +1,39 @@
+{
+  "index_patterns": [
+    "filebeat*"
+  ],
+  "priority": 0,
+  "version": 0,
+  "template": {
+    "mappings": {
+      "properties":
+{{ $.fields | indent 6 }}
+      ,
+      "dynamic_templates": [
+        {
+          "strings": {
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "{dynamic_type}",
+              "store": false,
+              "index": false,
+              "doc_values": false,
+              "norms": false
+            }
+          }
+        },
+        {
+          "all": {
+            "match_mapping_type": "*",
+            "mapping": {
+              "type": "{dynamic_type}",
+              "store": false,
+              "index": false,
+              "doc_values": false
+            }
+          }
+        }
+      ]
+    }
+  }
+}
