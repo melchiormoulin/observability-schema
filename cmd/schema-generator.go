@@ -3,19 +3,18 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	plugin_go "github.com/golang/protobuf/protoc-gen-go/plugin"
-	pb "github.com/melchiormoulin/observability-schema/schema"
 	"github.com/melchiormoulin/observability-schema/elasticsearch"
+	pb "github.com/melchiormoulin/observability-schema/schema"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
-var template = flag.String("template", "mapping.template", "elasticsearch template to render.")
 
 func getElasticsearchType(options *descriptorpb.FieldOptions) (proto.Message, error) {
 	esFieldConfig, _ := proto.GetExtension(options, pb.E_ElasticsearchField)
@@ -40,6 +39,12 @@ func main() {
 	fieldsMapping := make(map[string]json.RawMessage)
 	if err := proto.Unmarshal(data, req); err != nil {
 		return
+	}
+	fmt.Fprintf(os.Stderr, "params %v\n", req.GetParameter())
+	keyValueParam := strings.Split(req.GetParameter(),"=")
+	template := "examples/elasticsearch/mapping.template"
+	if len(keyValueParam) == 2 && keyValueParam[0] == "template_in" {
+		template = keyValueParam[1]
 	}
 	fmt.Fprintf(os.Stderr, ">>>>>>>>>>> generating for file %+v\n", req.FileToGenerate)
 	protofile := req.ProtoFile
@@ -68,16 +73,13 @@ func main() {
 	fields := string(fieldsDefinition)
 	fileName := "template.json"
 	var buffer bytes.Buffer
-	elasticsearch.Rendertemplate(*template, fields,&buffer)
+	elasticsearch.Rendertemplate(template, fields, &buffer)
 	bufferStr := buffer.String()
-	outputFile := plugin_go.CodeGeneratorResponse_File{Name: &fileName,Content:&bufferStr}
-	resp.File = []*plugin_go.CodeGeneratorResponse_File {&outputFile}
+	outputFile := plugin_go.CodeGeneratorResponse_File{Name: &fileName, Content: &bufferStr}
+	resp.File = []*plugin_go.CodeGeneratorResponse_File{&outputFile}
 	marshalled, err := proto.Marshal(resp)
 	if err != nil {
 		panic(err)
 	}
 	os.Stdout.Write(marshalled)
-
-
-
 }
