@@ -2,84 +2,53 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	plugin_go "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/melchiormoulin/observability-schema/elasticsearch"
-	pb "github.com/melchiormoulin/observability-schema/schema"
-	"google.golang.org/protobuf/types/descriptorpb"
 	"io/ioutil"
 	"os"
 	"strings"
 )
 
-
-func getElasticsearchType(options *descriptorpb.FieldOptions) (proto.Message, error) {
-	esFieldConfig, _ := proto.GetExtension(options, pb.E_ElasticsearchField)
-	esFieldConfigString, _ := proto.GetExtension(options, pb.E_ElasticsearchFieldString)
-	var esType proto.Message
-	if esFieldConfig != nil {
-		esType = esFieldConfig.(*pb.ElasticsearchField)
-	}
-	if esFieldConfigString != nil {
-		esType = esFieldConfigString.(*pb.ElasticsearchFieldString)
-	}
-	return esType, nil
-}
-
-func main() {
-	data, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		return
-	}
-	req := &plugin_go.CodeGeneratorRequest{}
+func initOutputStructSerialized(buffer *bytes.Buffer) []byte {
 	resp := &plugin_go.CodeGeneratorResponse{}
-	fieldsMapping := make(map[string]json.RawMessage)
-	if err := proto.Unmarshal(data, req); err != nil {
-		return
+	bufferStr := buffer.String()
+	fileName := "template.json"
+	outputFile := plugin_go.CodeGeneratorResponse_File{Name: &fileName, Content: &bufferStr}
+	resp.File = []*plugin_go.CodeGeneratorResponse_File{&outputFile}
+	output, err := proto.Marshal(resp)
+	if err != nil {
+		panic(err)
 	}
-	fmt.Fprintf(os.Stderr, "params %v\n", req.GetParameter())
-	keyValueParam := strings.Split(req.GetParameter(),"=")
+	return output
+}
+func parseParam(param string) string {
+	keyValueParam := strings.Split(param, "=")
 	template := "examples/elasticsearch/mapping.template"
 	if len(keyValueParam) == 2 && keyValueParam[0] == "template_in" {
 		template = keyValueParam[1]
 	}
-	fmt.Fprintf(os.Stderr, ">>>>>>>>>>> generating for file %+v\n", req.FileToGenerate)
-	protofile := req.ProtoFile
-	for _, p := range protofile {
-		//	fmt.Fprintf(os.Stderr, ">>>>> name %+v\n", p.GetName())
-		messageTypes := p.GetMessageType()
-		for _, messageType := range messageTypes {
-			if messageType.GetName() == "ObservabilitySchema" {
-				//fmt.Fprintf(os.Stderr, ">>>>>>>>>>> messageTYpe  %+v\n", messageType)
-				fields := messageType.GetField()
-				for _, field := range fields {
-					options := field.GetOptions()
-					jsonPbConfig := jsonpb.Marshaler{EmitDefaults: true, OrigName: true}
-					esType, _ := getElasticsearchType(options)
-					esTypebytes, _ := jsonPbConfig.MarshalToString(esType)
-					fieldConfiguration := json.RawMessage(esTypebytes)
-					name := field.GetName()
-					fmt.Fprintf(os.Stderr, ">>>>>>>>>>> field %+v : %+v\n", field.GetName(), esTypebytes)
-					fieldsMapping[name] = fieldConfiguration
+	return template
+}
+func initReq(data []byte) *plugin_go.CodeGeneratorRequest {
 
-				}
-			}
-		}
+	req := &plugin_go.CodeGeneratorRequest{}
+
+	if err := proto.Unmarshal(data, req); err != nil {
+		panic(err)
 	}
-	fieldsDefinition, err := json.MarshalIndent(fieldsMapping, "", "  ")
-	fields := string(fieldsDefinition)
-	fileName := "template.json"
-	var buffer bytes.Buffer
-	elasticsearch.Rendertemplate(template, fields, &buffer)
-	bufferStr := buffer.String()
-	outputFile := plugin_go.CodeGeneratorResponse_File{Name: &fileName, Content: &bufferStr}
-	resp.File = []*plugin_go.CodeGeneratorResponse_File{&outputFile}
-	marshalled, err := proto.Marshal(resp)
+	return req
+
+}
+func main() {
+	data, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		panic(err)
 	}
-	os.Stdout.Write(marshalled)
+	input := initReq(data)
+	fmt.Fprintf(os.Stderr, "generating for file %+v with params %+v\n", input.FileToGenerate,input.GetParameter())
+	fieldsDefinition := elasticsearch.FieldsDefinitions(input.GetProtoFile())
+	buffer := elasticsearch.Rendertemplate(parseParam(input.GetParameter()), fieldsDefinition)
+	os.Stdout.Write(initOutputStructSerialized(buffer))
 }
