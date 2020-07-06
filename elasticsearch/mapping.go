@@ -9,10 +9,11 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 	"os"
 )
+
 type Mapping struct {
 	fieldsMapping    map[string]json.RawMessage
 	jsonPbConfig     jsonpb.Marshaler
-	FieldsDefinition string
+	fieldsDefinition string
 }
 
 func getElasticsearchType(options *descriptorpb.FieldOptions) proto.Message {
@@ -29,45 +30,56 @@ func getElasticsearchType(options *descriptorpb.FieldOptions) proto.Message {
 	return esType
 }
 
-func FieldsDefinitions(protofile []*descriptorpb.FileDescriptorProto) string {
+func MappingInit() Mapping {
 	jsonPbConfig := jsonpb.Marshaler{EmitDefaults: true, OrigName: true}
 	fieldsMapping := make(map[string]json.RawMessage)
 	mapping := Mapping{
 		fieldsMapping: fieldsMapping,
 		jsonPbConfig:  jsonPbConfig,
 	}
-	mapping.getFields(protofile)
-	return mapping.String()
+	mapping.addTimestampField()
+	return mapping
 }
-func (mapping *Mapping) getFields(protofile []*descriptorpb.FileDescriptorProto) string{
+func (mapping *Mapping) addTimestampField() {
+	fieldDefinition := pb.ElasticsearchFieldString{Type:"keyword",DocValues: true, Index: true}
+	mapping.addField("@timestamp",&fieldDefinition)
+}
+func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescriptorProto) string {
 	for _, p := range protofile {
 		//	fmt.Fprintf(os.Stderr, ">>>>> name %+v\n", p.GetName())
 		messageTypes := p.GetMessageType()
 		for _, messageType := range messageTypes {
 			if messageType.GetName() == "ObservabilitySchema" {
+				fields := messageType.GetField()
 				//fmt.Fprintf(os.Stderr, ">>>>>>>>>>> messageTYpe  %+v\n", messageType)
-				mapping.populateFields(messageType.GetField())
+				for _, field := range fields {
+					mapping.parseField(field)
+				}
+
 			}
 		}
 	}
 	return mapping.String()
 }
-func (mapping *Mapping) String() string{
+func (mapping *Mapping) String() string {
 	fieldsDefinition, err := json.MarshalIndent(mapping.fieldsMapping, "", "  ")
 	if err != nil {
 		panic(err)
 	}
 	return string(fieldsDefinition)
 }
-func (mapping *Mapping) populateFields(fields []*descriptorpb.FieldDescriptorProto) {
-	for _, field := range fields {
-		fieldDefinition := getElasticsearchType(	field.GetOptions())
-		fieldDefinitionBytes, err := mapping.jsonPbConfig.MarshalToString(fieldDefinition)
-		if err != nil {
-			panic(fmt.Errorf("error during protobuf marshaling %+v",err))
-		}
-		name := field.GetName()
-		mapping.fieldsMapping[name] = json.RawMessage(fieldDefinitionBytes)
-		fmt.Fprintf(os.Stderr, "field %+v : %+v\n", name, fieldDefinitionBytes)
+func (mapping *Mapping) parseField(field *descriptorpb.FieldDescriptorProto) {
+	fieldDefinition := getElasticsearchType(field.GetOptions())
+	mapping.addField(field.GetName(),fieldDefinition)
+
+}
+
+func(mapping *Mapping) addField(fieldName string,fieldDefinition proto.Message) {
+	fieldDefinitionBytes, err := mapping.jsonPbConfig.MarshalToString(fieldDefinition)
+	if err != nil {
+		panic(fmt.Errorf("error during protobuf marshaling %+v", err))
 	}
+	mapping.fieldsMapping[fieldName] = json.RawMessage(fieldDefinitionBytes)
+	fmt.Fprintf(os.Stderr, "field %+v : %+v\n", fieldName, fieldDefinitionBytes)
+
 }

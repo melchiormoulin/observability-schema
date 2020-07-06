@@ -16,5 +16,5 @@ How this tool solves those issues ?
 
 How to use it ?
 
-Install `golang` `protoc` and `make` and launch the `make command.
+Install `golang` `protoc` and `make` and launch the `make` command.
 Look at the generated elasticsearch template in output/

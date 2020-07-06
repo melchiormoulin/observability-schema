@@ -8,6 +8,13 @@
     "mappings": {
       "properties":
       {
+        "@timestamp": {
+          "type": "keyword",
+          "store": false,
+          "index": true,
+          "doc_values": true,
+          "norms": false
+        },
         "port": {
           "type": "integer",
           "store": false,
