@@ -16,7 +16,7 @@ func main() {
 	}
 	input := protoplugin.ReqInit(data)
 	fmt.Fprintf(os.Stderr, "generating for file %+v with params %+v\n", input.FileToGenerate,input.GetParameter())
-	mapping := elasticsearch.MappingInit()
+	mapping := elasticsearch.MappingInit(true,"  ","")
 	fieldsDefinition := mapping.FieldsDefinition(input.GetProtoFile())
 	templatePath := protoplugin.TemplatePath(input.GetParameter())
 	buffer := elasticsearch.RenderTemplate(templatePath, fieldsDefinition)

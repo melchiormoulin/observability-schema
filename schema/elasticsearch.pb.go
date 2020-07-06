@@ -30,7 +30,7 @@ type ElasticsearchField struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type      string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"` //boolean
+	Type      string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"` //all others type than keyword or text
 	Store     bool   `protobuf:"varint,2,opt,name=store,proto3" json:"store,omitempty"`
 	Index     bool   `protobuf:"varint,3,opt,name=index,proto3" json:"index,omitempty"`
 	DocValues bool   `protobuf:"varint,4,opt,name=doc_values,json=docValues,proto3" json:"doc_values,omitempty"`
