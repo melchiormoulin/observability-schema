@@ -19,11 +19,10 @@ type Mapping struct {
 }
 
 func getElasticsearchType(options *descriptorpb.FieldOptions) proto.Message {
-	if proto.HasExtension(options,pb.E_ElasticsearchField) {
+	if proto.HasExtension(options, pb.E_ElasticsearchField) {
 		esFieldConfig := proto.GetExtension(options, pb.E_ElasticsearchField)
 		return esFieldConfig.(proto.Message)
-	}
-	if proto.HasExtension(options,pb.E_ElasticsearchFieldString) {
+	} else if proto.HasExtension(options, pb.E_ElasticsearchFieldString) {
 		esFieldConfigString := proto.GetExtension(options, pb.E_ElasticsearchFieldString)
 		return esFieldConfigString.(proto.Message)
 	}
@@ -31,7 +30,7 @@ func getElasticsearchType(options *descriptorpb.FieldOptions) proto.Message {
 }
 
 func MappingInit(withTimestampField bool, formatIndent string, formatPrefix string) Mapping {
-	protoJson :=  protojson.MarshalOptions{EmitUnpopulated: true,UseProtoNames: true}
+	protoJson := protojson.MarshalOptions{EmitUnpopulated: true, UseProtoNames: true}
 	fieldsMapping := make(map[string]json.RawMessage)
 	mapping := Mapping{
 		fieldsMapping: fieldsMapping,
@@ -78,7 +77,7 @@ func (mapping *Mapping) parseField(field *descriptorpb.FieldDescriptorProto) {
 }
 
 func (mapping *Mapping) addField(fieldName string, fieldDefinition proto.Message) {
-	fieldsDefinitionBytes,_:=mapping.protoJson.Marshal(fieldDefinition)
+	fieldsDefinitionBytes, _ := mapping.protoJson.Marshal(fieldDefinition) //Can't use the basic encoding/json because we can't use EmitUnpopulated: true with the basic json package.
 	mapping.fieldsMapping[fieldName] = json.RawMessage(string(fieldsDefinitionBytes))
 	fmt.Fprintf(os.Stderr, "field %+v : %+v\n", fieldName, fieldDefinition)
 }
