@@ -35,6 +35,6 @@ func TemplatePath(param string) string {
 		template = keyValueParam[1]
 		return template
 	}
-	panic(fmt.Errorf("bad param %+v",param))
+	panic(fmt.Errorf("bad param %+v", param))
 
 }

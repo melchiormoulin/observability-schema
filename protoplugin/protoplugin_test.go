@@ -8,11 +8,11 @@ import (
 )
 
 func TestReqInit(t *testing.T) {
-	data,_:=ioutil.ReadFile("/Users/m.moulin/github/observability-schema/schema/observabilitySchema.proto")
+	data, _ := ioutil.ReadFile("/Users/m.moulin/github/observability-schema/schema/observabilitySchema.proto")
 	ReqInit(data)
-//	if req.GetProtoFile() == nil {
-//		t.Errorf("bad file parsing")
-//	}
-	assert.Equal(t,123,123,"COUCOU")
+	//	if req.GetProtoFile() == nil {
+	//		t.Errorf("bad file parsing")
+	//	}
+	assert.Equal(t, 123, 123, "COUCOU")
 
 }

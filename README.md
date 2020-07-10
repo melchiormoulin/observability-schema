@@ -15,4 +15,4 @@ This repo provides:
 How to use it ?
 
 Install `golang` `protoc` and `make` and launch the `make` command.
-Look at the generated elasticsearch template in `examples/elasticsearch/template.json`
+Look at the input and output examples of the plugin  in `examples/elasticsearch/`

@@ -49,7 +49,7 @@ func (mapping *Mapping) addTimestampField() {
 }
 func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescriptorProto) string {
 	for _, p := range protofile {
-			//fmt.Fprintf(os.Stderr, ">>>>> name %+v\n", p)
+		//fmt.Fprintf(os.Stderr, ">>>>> name %+v\n", p)
 
 		messageTypes := p.GetMessageType()
 		for _, messageType := range messageTypes {

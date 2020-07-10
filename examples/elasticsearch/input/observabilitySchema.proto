@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package observability.schema;
+import "elasticsearch.proto";
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.FieldOptions {
+    ElasticsearchField elasticsearch_field = 5001;
+    ElasticsearchFieldString elasticsearch_field_string = 5002;
+}
+message ObservabilitySchema {
+    string user_id=1 [(elasticsearch_field_string).type="keyword",(elasticsearch_field_string).index=true,(elasticsearch_field_string).doc_values=true];
+    int32 port=2 [(elasticsearch_field).type="integer",(elasticsearch_field).index=true,(elasticsearch_field).doc_values=true];
+}

@@ -7,9 +7,7 @@ import (
 )
 import "text/template"
 
-
-
-func RenderTemplate(filename string,fields string) *bytes.Buffer{
+func RenderTemplate(filename string, fields string) *bytes.Buffer {
 	var bufferOutputFile bytes.Buffer
 	templateFile, err := ioutil.ReadFile(filename)
 	template := template.Must(template.New("").Funcs(sprig.TxtFuncMap()).Parse(string(templateFile)))
