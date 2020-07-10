@@ -50,7 +50,6 @@ func TestAddField(t *testing.T) {
 
 func TestGetElasticsearchType(t *testing.T) {
 	options := descriptorpb.FieldOptions{}
-
 	fieldStringType :=  pb.ElasticsearchFieldString{Type:"keyword",DocValues: true, Index: true}
 	proto.SetExtension(&options,pb.E_ElasticsearchFieldString,&fieldStringType)
 	msg := getElasticsearchType(&options)
@@ -64,5 +63,33 @@ func TestGetElasticsearchType(t *testing.T) {
 	if msg == nil {
 		t.Errorf("msg should not be nil")
 	}
+	}
 
+func TestParseField(t *testing.T) {
+	userId:="user_id"
+	options := descriptorpb.FieldOptions{}
+	fieldStringType :=  pb.ElasticsearchFieldString{Type:"keyword",DocValues: true, Index: true}
+	proto.SetExtension(&options,pb.E_ElasticsearchFieldString,&fieldStringType)
+	desc:=descriptorpb.FieldDescriptorProto{Name: &userId,Options:&options}
+	mapping :=MappingInit(false,"  ","")
+	mapping.parseField(&desc)
+	if mapping.fieldsMapping[userId] == nil {
+		t.Errorf("the field %+v should be present",userId)
+	}
+}
+
+func TestFieldDefinitions(t *testing.T) {
+	userId:="user_id"
+	options := descriptorpb.FieldOptions{}
+	fieldStringType :=  pb.ElasticsearchFieldString{Type:"keyword",DocValues: true, Index: true}
+	proto.SetExtension(&options,pb.E_ElasticsearchFieldString,&fieldStringType)
+	desc:=descriptorpb.FieldDescriptorProto{Name: &userId,Options:&options}
+	mapping :=MappingInit(false,"  ","")
+	observabilitySchema:= "ObservabilitySchema"
+	descProto:=descriptorpb.DescriptorProto{Name:&observabilitySchema,Field: []*descriptorpb.FieldDescriptorProto{&desc}}
+	fileProto:=descriptorpb.FileDescriptorProto{MessageType:[]*descriptorpb.DescriptorProto{&descProto} }
+	mapping.FieldsDefinition([]*descriptorpb.FileDescriptorProto{&fileProto})
+	if mapping.fieldsMapping[userId] == nil {
+		t.Errorf("the field %+v should be present",userId)
+	}
 }

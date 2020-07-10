@@ -2,6 +2,7 @@ package protoplugin
 
 import (
 	"bytes"
+	"fmt"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/pluginpb"
 	"strings"
@@ -32,6 +33,8 @@ func TemplatePath(param string) string {
 	template := "examples/elasticsearch/mapping.template"
 	if len(keyValueParam) == 2 && keyValueParam[0] == "template_in" {
 		template = keyValueParam[1]
+		return template
 	}
-	return template
+	panic(fmt.Errorf("bad param %+v",param))
+
 }

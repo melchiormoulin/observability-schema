@@ -49,12 +49,12 @@ func (mapping *Mapping) addTimestampField() {
 }
 func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescriptorProto) string {
 	for _, p := range protofile {
-		//	fmt.Fprintf(os.Stderr, ">>>>> name %+v\n", p.GetName())
+			//fmt.Fprintf(os.Stderr, ">>>>> name %+v\n", p)
+
 		messageTypes := p.GetMessageType()
 		for _, messageType := range messageTypes {
 			if messageType.GetName() == "ObservabilitySchema" {
 				fields := messageType.GetField()
-				//fmt.Fprintf(os.Stderr, ">>>>>>>>>>> messageTYpe  %+v\n", messageType)
 				for _, field := range fields {
 					mapping.parseField(field)
 				}
