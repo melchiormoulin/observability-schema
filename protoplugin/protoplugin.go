@@ -2,10 +2,15 @@ package protoplugin
 
 import (
 	"bytes"
-	"fmt"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/pluginpb"
 	"strings"
+)
+
+const (
+	templatePath = "examples/elasticsearch/input/mapping.template"
+	templateInParam        = "template_in"
+	templateOutputFileName = "template.json"
 )
 
 func ReqInit(data []byte) *pluginpb.CodeGeneratorRequest {
@@ -18,7 +23,7 @@ func ReqInit(data []byte) *pluginpb.CodeGeneratorRequest {
 func OutputStructSerialized(buffer *bytes.Buffer) []byte {
 	resp := &pluginpb.CodeGeneratorResponse{}
 	bufferStr := buffer.String()
-	fileName := "template.json"
+	fileName := templateOutputFileName
 	outputFile := pluginpb.CodeGeneratorResponse_File{Name: &fileName, Content: &bufferStr}
 	resp.File = []*pluginpb.CodeGeneratorResponse_File{&outputFile}
 	output, err := proto.Marshal(resp)
@@ -30,11 +35,9 @@ func OutputStructSerialized(buffer *bytes.Buffer) []byte {
 
 func TemplatePath(param string) string {
 	keyValueParam := strings.Split(param, "=")
-	template := "examples/elasticsearch/mapping.template"
-	if len(keyValueParam) == 2 && keyValueParam[0] == "template_in" {
+	template := templatePath
+	if len(keyValueParam) == 2 && keyValueParam[0] == templateInParam {
 		template = keyValueParam[1]
-		return template
 	}
-	panic(fmt.Errorf("bad param %+v", param))
-
+	return template
 }
