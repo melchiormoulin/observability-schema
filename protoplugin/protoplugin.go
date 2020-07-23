@@ -2,13 +2,14 @@ package protoplugin
 
 import (
 	"bytes"
+	"fmt"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/pluginpb"
 	"strings"
 )
 
 const (
-	templatePath = "examples/elasticsearch/input/mapping.template"
+	templatePath           = "examples/elasticsearch/input/mapping.template"
 	templateInParam        = "template_in"
 	templateOutputFileName = "template.json"
 )
@@ -33,11 +34,14 @@ func OutputStructSerialized(buffer *bytes.Buffer) []byte {
 	return output
 }
 
-func TemplatePath(param string) string {
+func TemplatePath(param string) (string,error) {
 	keyValueParam := strings.Split(param, "=")
 	template := templatePath
+	var err error
 	if len(keyValueParam) == 2 && keyValueParam[0] == templateInParam {
 		template = keyValueParam[1]
+	} else {
+		err=fmt.Errorf("templatein format : %v=thePath/my-input.template actually received : %v ",templateInParam,param)
 	}
-	return template
+	return template,err
 }

@@ -14,10 +14,13 @@ func main() {
 		panic(fmt.Errorf("error in reading stdin %+v", err))
 	}
 	input := protoplugin.ReqInit(data)
+	templatePath,err := protoplugin.TemplatePath(input.GetParameter())
+	if err!= nil {
+		panic(fmt.Errorf("bad template_in path %v",err))
+	}
 	fmt.Fprintf(os.Stderr, "generating for file %+v with params %+v\n", input.FileToGenerate, input.GetParameter())
 	mapping := elasticsearch.MappingInit(true, "  ", "")
 	fieldsDefinition := mapping.FieldsDefinition(input.GetProtoFile())
-	templatePath := protoplugin.TemplatePath(input.GetParameter())
 	buffer := elasticsearch.RenderTemplate(templatePath, fieldsDefinition)
 	os.Stdout.Write(protoplugin.OutputStructSerialized(buffer))
 }

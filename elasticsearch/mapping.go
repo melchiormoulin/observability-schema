@@ -10,14 +10,16 @@ import (
 	"os"
 )
 
+//Mapping struct is to get the generated mapping
 type Mapping struct {
-	fieldsMapping    map[string]json.RawMessage
-	protoJson        protojson.MarshalOptions
-	fieldsDefinition string
-	formatIndent     string
-	formatPrefix     string
+	fieldsMapping    map[string]json.RawMessage // Elasticsearch Mapping with all fields name in keys with their definitions in value, rawMessage because of protobuf json serialization
+	protoJSON        protojson.MarshalOptions   // needed for json serialization
+	fieldsDefinition string                     // the json string of the mapping
+	formatIndent     string                     // format param for fieldsDefinition
+	formatPrefix     string                     //format param for fieldsDefinition
 }
 
+//Only two types are allowed for now for elasticsearch
 func getElasticsearchType(options *descriptorpb.FieldOptions) proto.Message {
 	if proto.HasExtension(options, pb.E_ElasticsearchField) {
 		esFieldConfig := proto.GetExtension(options, pb.E_ElasticsearchField)
@@ -29,12 +31,13 @@ func getElasticsearchType(options *descriptorpb.FieldOptions) proto.Message {
 	panic(fmt.Errorf("bad protobuf option type"))
 }
 
+//Get a new instance of Mapping struct
 func MappingInit(withTimestampField bool, formatIndent string, formatPrefix string) Mapping {
 	protoJson := protojson.MarshalOptions{EmitUnpopulated: true, UseProtoNames: true}
 	fieldsMapping := make(map[string]json.RawMessage)
 	mapping := Mapping{
 		fieldsMapping: fieldsMapping,
-		protoJson:     protoJson,
+		protoJSON:     protoJson,
 		formatIndent:  formatIndent,
 		formatPrefix:  formatPrefix,
 	}
@@ -77,7 +80,7 @@ func (mapping *Mapping) parseField(field *descriptorpb.FieldDescriptorProto) {
 }
 
 func (mapping *Mapping) addField(fieldName string, fieldDefinition proto.Message) {
-	fieldsDefinitionBytes, _ := mapping.protoJson.Marshal(fieldDefinition) //Can't use the basic encoding/json because we can't use EmitUnpopulated: true with the basic json package.
+	fieldsDefinitionBytes, _ := mapping.protoJSON.Marshal(fieldDefinition) //Can't use the basic encoding/json because we can't use EmitUnpopulated: true with the basic json package.
 	mapping.fieldsMapping[fieldName] = json.RawMessage(string(fieldsDefinitionBytes))
 	fmt.Fprintf(os.Stderr, "field %+v : %+v\n", fieldName, fieldDefinition)
 }

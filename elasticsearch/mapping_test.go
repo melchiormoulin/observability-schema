@@ -22,8 +22,8 @@ func TestMappingInit(t *testing.T) {
 	}
 	expectedProtoJson := protojson.MarshalOptions{EmitUnpopulated: true, UseProtoNames: true}
 
-	if mapping.protoJson != expectedProtoJson {
-		t.Errorf("the protojson marshaler has not been set correctly expected : %+v find : %+v", expectedProtoJson, mapping.protoJson)
+	if mapping.protoJSON != expectedProtoJson {
+		t.Errorf("the protojson marshaler has not been set correctly expected : %+v find : %+v", expectedProtoJson, mapping.protoJSON)
 	}
 	if mapping.fieldsMapping == nil {
 		t.Errorf("the fieldsMapping map is nil")
@@ -40,7 +40,7 @@ func TestAddField(t *testing.T) {
 	mapping := MappingInit(true, "  ", "")
 	expectedFieldDefinitionStruct := pb.ElasticsearchFieldString{Type: "keyword", DocValues: true, Index: true}
 	mapping.addField("@timestamp", &expectedFieldDefinitionStruct)
-	fieldsDefinitionBytes, _ := mapping.protoJson.Marshal(&expectedFieldDefinitionStruct)
+	fieldsDefinitionBytes, _ := mapping.protoJSON.Marshal(&expectedFieldDefinitionStruct)
 	expectedFieldDefinitionTmp := json.RawMessage(fieldsDefinitionBytes)
 	fieldDefinition, _ := mapping.fieldsMapping["@timestamp"].MarshalJSON()
 	expectedFieldDefinition, _ := expectedFieldDefinitionTmp.MarshalJSON()
@@ -67,7 +67,7 @@ func TestGetElasticsearchType(t *testing.T) {
 }
 func TestGetElasticsearchTypePanic(t *testing.T) {
 	options := descriptorpb.FieldOptions{}
-	assert.Panics(t,func() { getElasticsearchType(&options) },"should panic has it is not an elasticsearchtype")
+	assert.Panics(t, func() { getElasticsearchType(&options) }, "should panic has it is not an elasticsearchtype")
 }
 
 func TestParseField(t *testing.T) {
