@@ -9,7 +9,7 @@ The purpose of this plugin is to provide a common schema for your observability 
 
 This repo provides:
 
-1. It provides a protobuf schema in order to define all fields names with their corresponding types for all applications.
+1. A protobuf schema in order to define all fields names with their corresponding types for all applications.
 2. The tool is the protoc plugin that parse schema and generate an elasticsearch template mapping.
 
 How to use it ?
