@@ -8,18 +8,55 @@
     "mappings": {
       "properties":
       {
-        "@timestamp": {
-          "type": "keyword",
-          "store": false,
-          "index": true,
-          "doc_values": true,
-          "norms": false
+        "fields": {
+          "test": {
+            "type": "integer",
+            "store": false,
+            "index": true,
+            "doc_values": true
+          }
         },
         "port": {
           "type": "integer",
           "store": false,
           "index": true,
           "doc_values": true
+        },
+        "tik": {
+          "tok": {
+            "user_id_tok": {
+              "type": "keyword",
+              "store": false,
+              "index": true,
+              "doc_values": true,
+              "norms": false
+            }
+          },
+          "user_id_tik": {
+            "doc_values": true,
+            "index": true,
+            "norms": false,
+            "store": false,
+            "type": "keyword"
+          }
+        },
+        "tok": {
+          "fake_tok": {
+            "doc_values": true,
+            "index": true,
+            "norms": false,
+            "store": false,
+            "type": "keyword"
+          },
+          "tak": {
+            "user_id_tak": {
+              "type": "keyword",
+              "store": false,
+              "index": true,
+              "doc_values": true,
+              "norms": false
+            }
+          }
         },
         "user_id": {
           "type": "keyword",

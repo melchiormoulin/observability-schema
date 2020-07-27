@@ -8,7 +8,24 @@ extend google.protobuf.FieldOptions {
     ElasticsearchField elasticsearch_field = 5001;
     ElasticsearchFieldString elasticsearch_field_string = 5002;
 }
+
 message ObservabilitySchema {
-    string user_id=1 [(elasticsearch_field_string).type="keyword",(elasticsearch_field_string).index=true,(elasticsearch_field_string).doc_values=true];
-    int32 port=2 [(elasticsearch_field).type="integer",(elasticsearch_field).index=true,(elasticsearch_field).doc_values=true];
+    string user_id = 1 [(elasticsearch_field_string).type = "keyword", (elasticsearch_field_string).index = true, (elasticsearch_field_string).doc_values = true];
+    int32 port = 2 [(elasticsearch_field).type = "integer", (elasticsearch_field).index = true, (elasticsearch_field).doc_values = true];
+    message fields {
+        int32 test = 3 [(elasticsearch_field).type = "integer", (elasticsearch_field).index = true, (elasticsearch_field).doc_values = true];
+    }
+    message tok {
+        string fake_tok = 6 [(elasticsearch_field_string).type = "keyword", (elasticsearch_field_string).index = true, (elasticsearch_field_string).doc_values = true];
+
+    }
+    message tik {
+        message tok {
+            message tak {
+                string user_id_tak = 7 [(elasticsearch_field_string).type = "keyword", (elasticsearch_field_string).index = true, (elasticsearch_field_string).doc_values = true];
+            }
+            string user_id_tok = 5 [(elasticsearch_field_string).type = "keyword", (elasticsearch_field_string).index = true, (elasticsearch_field_string).doc_values = true];
+        }
+        string user_id_tik = 4 [(elasticsearch_field_string).type = "keyword", (elasticsearch_field_string).index = true, (elasticsearch_field_string).doc_values = true];
+    }
 }

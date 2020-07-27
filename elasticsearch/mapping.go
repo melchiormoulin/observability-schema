@@ -52,21 +52,55 @@ func (mapping *Mapping) addTimestampField() {
 }
 func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescriptorProto) string {
 	for _, p := range protofile {
-		//fmt.Fprintf(os.Stderr, ">>>>> name %+v\n", p)
-
 		messageTypes := p.GetMessageType()
 		for _, messageType := range messageTypes {
 			if messageType.GetName() == "ObservabilitySchema" {
-				fields := messageType.GetField()
-				for _, field := range fields {
-					mapping.parseField(field)
+				nestedTypes := messageType.GetNestedType()
+				oldNestTypesName := ""
+				for nestedTypes != nil {
+					for _, nestedType := range nestedTypes {
+						tmpFieldMap := make(map[string]json.RawMessage)
+						fields := nestedType.GetField()
+						for _, field := range fields {
+							fieldsDefinitionBytes := mapping.parseField(field)
+							tmpFieldMap[*field.Name] = fieldsDefinitionBytes
+							fmt.Fprintf(os.Stderr, "from nested field  %+v : %+v\n", *field.Name, string(fieldsDefinitionBytes))
+						}
+						myJson, _ := json.Marshal(tmpFieldMap)
+						if oldNestTypesName == "" {
+							mapping.fieldsMapping[*nestedType.Name] = myJson
+
+						} else {
+							tmpFieldMap2 := make(map[string]json.RawMessage)
+							tmpFieldMap2[*nestedType.Name] =myJson
+							out := map[string]interface{}{}
+							json.Unmarshal(mapping.fieldsMapping[oldNestTypesName], &out)
+							for key,value := range tmpFieldMap2 {
+								out[key] = value
+							}
+							tmpJson,_ := json.Marshal(out)
+							mapping.fieldsMapping[oldNestTypesName] = tmpJson
+						}
+						nestedTypes = nestedType.GetNestedType()
+						if len(nestedTypes) > 0 {
+							oldNestTypesName = *nestedType.Name
+						}
+					}
 				}
 
+				fields := messageType.GetField()
+				for _, field := range fields {
+					fieldsDefinitionBytes := mapping.parseField(field)
+					mapping.fieldsMapping[*field.Name] = fieldsDefinitionBytes
+					fmt.Fprintf(os.Stderr, "basic field %+v : %+v\n", *field.Name, string(fieldsDefinitionBytes))
+				}
 			}
 		}
 	}
 	return mapping.String()
 }
+
+
 func (mapping *Mapping) String() string {
 	fieldsDefinition, err := json.MarshalIndent(mapping.fieldsMapping, mapping.formatPrefix, mapping.formatIndent)
 	if err != nil {
@@ -74,13 +108,12 @@ func (mapping *Mapping) String() string {
 	}
 	return string(fieldsDefinition)
 }
-func (mapping *Mapping) parseField(field *descriptorpb.FieldDescriptorProto) {
+func (mapping *Mapping) parseField(field *descriptorpb.FieldDescriptorProto) json.RawMessage {
 	fieldDefinition := getElasticsearchType(field.GetOptions())
-	mapping.addField(field.GetName(), fieldDefinition)
+	return mapping.addField(field.GetName(), fieldDefinition)
 }
 
-func (mapping *Mapping) addField(fieldName string, fieldDefinition proto.Message) {
+func (mapping *Mapping) addField(fieldName string, fieldDefinition proto.Message) json.RawMessage {
 	fieldsDefinitionBytes, _ := mapping.protoJSON.Marshal(fieldDefinition) //Can't use the basic encoding/json because we can't use EmitUnpopulated: true with the basic json package.
-	mapping.fieldsMapping[fieldName] = json.RawMessage(string(fieldsDefinitionBytes))
-	fmt.Fprintf(os.Stderr, "field %+v : %+v\n", fieldName, fieldDefinition)
+	return fieldsDefinitionBytes
 }
