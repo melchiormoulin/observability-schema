@@ -23,6 +23,13 @@
           "doc_values": true
         },
         "tik": {
+          "user_id_tik": {
+            "type": "keyword",
+            "store": false,
+            "index": true,
+            "doc_values": true,
+            "norms": false
+          },
           "tok": {
             "user_id_tok": {
               "type": "keyword",
@@ -30,32 +37,32 @@
               "index": true,
               "doc_values": true,
               "norms": false
+            },
+            "tak": {
+              "user_id_tak": {
+                "type": "keyword",
+                "store": false,
+                "index": true,
+                "doc_values": true,
+                "norms": false
+              },
+              "user_id_tak2": {
+                "type": "keyword",
+                "store": false,
+                "index": true,
+                "doc_values": true,
+                "norms": false
+              }
             }
-          },
-          "user_id_tik": {
-            "doc_values": true,
-            "index": true,
-            "norms": false,
-            "store": false,
-            "type": "keyword"
           }
         },
         "tok": {
           "fake_tok": {
-            "doc_values": true,
-            "index": true,
-            "norms": false,
+            "type": "keyword",
             "store": false,
-            "type": "keyword"
-          },
-          "tak": {
-            "user_id_tak": {
-              "type": "keyword",
-              "store": false,
-              "index": true,
-              "doc_values": true,
-              "norms": false
-            }
+            "index": true,
+            "doc_values": true,
+            "norms": false
           }
         },
         "user_id": {

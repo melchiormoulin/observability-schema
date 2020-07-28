@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	pb "github.com/melchiormoulin/observability-schema/schema"
+	"github.com/tidwall/sjson"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"os"
+	"strings"
 )
 
 //Mapping struct is to get the generated mapping
@@ -56,7 +58,9 @@ func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescripto
 		for _, messageType := range messageTypes {
 			if messageType.GetName() == "ObservabilitySchema" {
 				nestedTypes := messageType.GetNestedType()
-				oldNestTypesName := ""
+
+				var oldNestTypesName []string
+
 				for nestedTypes != nil {
 					for _, nestedType := range nestedTypes {
 						tmpFieldMap := make(map[string]json.RawMessage)
@@ -67,23 +71,36 @@ func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescripto
 							fmt.Fprintf(os.Stderr, "from nested field  %+v : %+v\n", *field.Name, string(fieldsDefinitionBytes))
 						}
 						myJson, _ := json.Marshal(tmpFieldMap)
-						if oldNestTypesName == "" {
+						if len(oldNestTypesName) == 0 {
 							mapping.fieldsMapping[*nestedType.Name] = myJson
 
 						} else {
 							tmpFieldMap2 := make(map[string]json.RawMessage)
-							tmpFieldMap2[*nestedType.Name] =myJson
-							out := map[string]interface{}{}
-							json.Unmarshal(mapping.fieldsMapping[oldNestTypesName], &out)
-							for key,value := range tmpFieldMap2 {
-								out[key] = value
-							}
-							tmpJson,_ := json.Marshal(out)
-							mapping.fieldsMapping[oldNestTypesName] = tmpJson
+							tmpFieldMap2[*nestedType.Name] = myJson
+						//	out := map[string]interface{}{}
+						//	if len(oldNestTypesName) > 1 {
+								str := mapping.String()
+								path := strings.Join(oldNestTypesName, ".") + "." + *nestedType.Name
+								str, _ = sjson.SetRaw(str, path, string(myJson))
+								json.Unmarshal([]byte(str), &mapping.fieldsMapping)
+								fmt.Fprintf(os.Stderr, "DEBUG  str: %+v \n", mapping.fieldsMapping)
+
+					//		}
+							//else {
+							//	json.Unmarshal(mapping.fieldsMapping[oldNestTypesName[0]], &out)
+							//	for key, value := range tmpFieldMap2 {
+							//		out[key] = value
+							//	}
+							//	tmpJson, _ := json.Marshal(out)
+							//	mapping.fieldsMapping[oldNestTypesName[0]] = tmpJson
+							//}
 						}
 						nestedTypes = nestedType.GetNestedType()
-						if len(nestedTypes) > 0 {
-							oldNestTypesName = *nestedType.Name
+						if len(nestedTypes) == 0 {
+							oldNestTypesName = nil
+						} else {
+							oldNestTypesName = append(oldNestTypesName, *nestedType.Name)
+
 						}
 					}
 				}
@@ -99,7 +116,6 @@ func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescripto
 	}
 	return mapping.String()
 }
-
 
 func (mapping *Mapping) String() string {
 	fieldsDefinition, err := json.MarshalIndent(mapping.fieldsMapping, mapping.formatPrefix, mapping.formatIndent)
