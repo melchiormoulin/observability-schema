@@ -14,7 +14,7 @@ import (
 
 //Mapping struct is to get the generated mapping
 type Mapping struct {
-	fieldsMapping    map[string]json.RawMessage // Elasticsearch Mapping with all fields name in keys with their definitions in value, rawMessage because of protobuf json serialization
+	fieldsMapping    map[string]json.RawMessage // Elasticsearch Mapping with all fields name in keys with their elasticsearch definitions in value, rawMessage because of protobuf json serialization
 	protoJSON        protojson.MarshalOptions   // needed for json serialization
 	fieldsDefinition string                     // the json string of the mapping
 	formatIndent     string                     // format param for fieldsDefinition
@@ -58,9 +58,7 @@ func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescripto
 		for _, messageType := range messageTypes {
 			if messageType.GetName() == "ObservabilitySchema" {
 				nestedTypes := messageType.GetNestedType()
-
-				var oldNestTypesName []string
-
+				var jsonPathChildren []string
 				for nestedTypes != nil {
 					for _, nestedType := range nestedTypes {
 						tmpFieldMap := make(map[string]json.RawMessage)
@@ -71,40 +69,17 @@ func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescripto
 							fmt.Fprintf(os.Stderr, "from nested field  %+v : %+v\n", *field.Name, string(fieldsDefinitionBytes))
 						}
 						myJson, _ := json.Marshal(tmpFieldMap)
-						if len(oldNestTypesName) == 0 {
-							mapping.fieldsMapping[*nestedType.Name] = myJson
-
-						} else {
-							tmpFieldMap2 := make(map[string]json.RawMessage)
-							tmpFieldMap2[*nestedType.Name] = myJson
-						//	out := map[string]interface{}{}
-						//	if len(oldNestTypesName) > 1 {
-								str := mapping.String()
-								path := strings.Join(oldNestTypesName, ".") + "." + *nestedType.Name
-								str, _ = sjson.SetRaw(str, path, string(myJson))
-								json.Unmarshal([]byte(str), &mapping.fieldsMapping)
-								fmt.Fprintf(os.Stderr, "DEBUG  str: %+v \n", mapping.fieldsMapping)
-
-					//		}
-							//else {
-							//	json.Unmarshal(mapping.fieldsMapping[oldNestTypesName[0]], &out)
-							//	for key, value := range tmpFieldMap2 {
-							//		out[key] = value
-							//	}
-							//	tmpJson, _ := json.Marshal(out)
-							//	mapping.fieldsMapping[oldNestTypesName[0]] = tmpJson
-							//}
-						}
+						str := mapping.String()
+						str, _ = sjson.SetRaw(str, getJsonPath(jsonPathChildren,*nestedType.Name), string(myJson))
+						json.Unmarshal([]byte(str), &mapping.fieldsMapping)
 						nestedTypes = nestedType.GetNestedType()
-						if len(nestedTypes) == 0 {
-							oldNestTypesName = nil
-						} else {
-							oldNestTypesName = append(oldNestTypesName, *nestedType.Name)
-
+						if len(nestedTypes) == 0 { //if no child clean the json jsonPath child list
+							jsonPathChildren = nil
+						} else { //else append the json child node
+							jsonPathChildren = append(jsonPathChildren, *nestedType.Name)
 						}
 					}
 				}
-
 				fields := messageType.GetField()
 				for _, field := range fields {
 					fieldsDefinitionBytes := mapping.parseField(field)
@@ -115,6 +90,14 @@ func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescripto
 		}
 	}
 	return mapping.String()
+}
+
+func getJsonPath(jsonPathChildren []string,currentNodeName string) string {
+	jsonPath := currentNodeName
+	if len(jsonPathChildren) > 0 {
+		jsonPath = strings.Join(jsonPathChildren, ".") + "." + jsonPath
+	}
+	return jsonPath
 }
 
 func (mapping *Mapping) String() string {
