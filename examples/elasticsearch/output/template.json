@@ -38,15 +38,8 @@
               "doc_values": true,
               "norms": false
             },
-            "tak": {
-              "user_id_tak": {
-                "type": "keyword",
-                "store": false,
-                "index": true,
-                "doc_values": true,
-                "norms": false
-              },
-              "user_id_tak2": {
+            "paf": {
+              "user_id_paf": {
                 "type": "keyword",
                 "store": false,
                 "index": true,

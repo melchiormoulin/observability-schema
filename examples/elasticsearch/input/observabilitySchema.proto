@@ -28,6 +28,10 @@ message ObservabilitySchema {
             }
             string user_id_tok = 5 [(elasticsearch_field_string).type = "keyword", (elasticsearch_field_string).index = true, (elasticsearch_field_string).doc_values = true];
         }
+        message paf {
+            string user_id_paf = 10 [(elasticsearch_field_string).type = "keyword", (elasticsearch_field_string).index = true, (elasticsearch_field_string).doc_values = true];
+
+        }
         string user_id_tik = 4 [(elasticsearch_field_string).type = "keyword", (elasticsearch_field_string).index = true, (elasticsearch_field_string).doc_values = true];
     }
 }
