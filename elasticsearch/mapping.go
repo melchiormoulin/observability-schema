@@ -50,7 +50,11 @@ func MappingInit(withTimestampField bool, formatIndent string, formatPrefix stri
 }
 func (mapping *Mapping) addTimestampField() {
 	fieldDefinition := pb.ElasticsearchFieldString{Type: "keyword", DocValues: true, Index: true}
-	mapping.addField("@timestamp", &fieldDefinition)
+	fieldsDefinitionBytes, err := mapping.protoJSON.Marshal(&fieldDefinition) //Can't use the basic encoding/json because we can't use EmitUnpopulated: true with the basic json package.
+	if err!=nil {
+		panic(err)
+	}
+	mapping.fieldsMapping["@timestamp"]= fieldsDefinitionBytes
 }
 func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescriptorProto) string {
 	for _, p := range protofile {
@@ -69,7 +73,7 @@ func (mapping *Mapping) parseFields(fields []*descriptorpb.FieldDescriptorProto,
 	for _, field := range fields {
 		fieldsDefinitionBytes := mapping.parseField(field)
 		jsonKv[*field.Name] = fieldsDefinitionBytes
-		fmt.Fprintf(os.Stderr, "basic field %+v : %+v\n", *field.Name, string(fieldsDefinitionBytes))
+		fmt.Fprintf(os.Stderr, "field %+v : %+v\n", *field.Name, string(fieldsDefinitionBytes))
 	}
 }
 
@@ -78,6 +82,7 @@ func (mapping *Mapping) parseNestedTypes(nestedTypes []*descriptorpb.DescriptorP
 		return
 	}
 	for _, nestedType := range nestedTypes {
+		fmt.Fprintf(os.Stderr, "nested type %+v \n", *nestedType.Name)
 		tmpFieldMap := make(map[string]json.RawMessage)
 		mapping.parseFields(nestedType.GetField(), tmpFieldMap)
 		mapping.parseNestedType(tmpFieldMap, jsonPath, *nestedType.Name)
@@ -90,7 +95,11 @@ func (mapping *Mapping) parseNestedTypes(nestedTypes []*descriptorpb.DescriptorP
 func (mapping *Mapping) parseNestedType(tmpFieldMap map[string]json.RawMessage, jsonPathChildren []string, currentNodeName string) {
 	myJson, _ := json.Marshal(tmpFieldMap)
 	str := mapping.String()
-	str, _ = sjson.SetRaw(str, getJsonPath(jsonPathChildren, currentNodeName), string(myJson))
+	var err error
+	str, err = sjson.SetRaw(str, getJsonPath(jsonPathChildren, currentNodeName), string(myJson))
+	if err!=nil {
+		panic(err)
+	}
 	json.Unmarshal([]byte(str), &mapping.fieldsMapping)
 }
 
@@ -120,10 +129,10 @@ func (mapping *Mapping) String() string {
 }
 func (mapping *Mapping) parseField(field *descriptorpb.FieldDescriptorProto) json.RawMessage {
 	fieldDefinition := getElasticsearchType(field.GetOptions())
-	return mapping.addField(field.GetName(), fieldDefinition)
-}
-
-func (mapping *Mapping) addField(fieldName string, fieldDefinition proto.Message) json.RawMessage {
-	fieldsDefinitionBytes, _ := mapping.protoJSON.Marshal(fieldDefinition) //Can't use the basic encoding/json because we can't use EmitUnpopulated: true with the basic json package.
+	fieldsDefinitionBytes, err := mapping.protoJSON.Marshal(fieldDefinition) //Can't use the basic encoding/json because we can't use EmitUnpopulated: true with the basic json package.
+	if err!=nil {
+		panic(err)
+	}
 	return fieldsDefinitionBytes
 }
+
