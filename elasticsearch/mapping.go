@@ -57,15 +57,15 @@ func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescripto
 		messageTypes := p.GetMessageType()
 		for _, messageType := range messageTypes {
 			if messageType.GetName() == "ObservabilitySchema" {
-				mapping.parseNestedTypes(messageType.GetNestedType())
-				mapping.parseFields(messageType.GetField(),mapping.fieldsMapping)
+				mapping.parseNestedTypes(messageType.GetNestedType(), []string{})
+				mapping.parseFields(messageType.GetField(), mapping.fieldsMapping)
 			}
 		}
 	}
 	return mapping.String()
 }
 
-func (mapping *Mapping) parseFields( fields []*descriptorpb.FieldDescriptorProto, jsonKv map[string]json.RawMessage) {
+func (mapping *Mapping) parseFields(fields []*descriptorpb.FieldDescriptorProto, jsonKv map[string]json.RawMessage) {
 	for _, field := range fields {
 		fieldsDefinitionBytes := mapping.parseField(field)
 		jsonKv[*field.Name] = fieldsDefinitionBytes
@@ -73,40 +73,40 @@ func (mapping *Mapping) parseFields( fields []*descriptorpb.FieldDescriptorProto
 	}
 }
 
-func (mapping *Mapping) parseNestedTypes(nestedTypes []*descriptorpb.DescriptorProto ) {
-	var jsonPathChildren []string
-	for nestedTypes != nil {
-		for _, nestedType := range nestedTypes {
-			tmpFieldMap := make(map[string]json.RawMessage)
-			mapping.parseFields(nestedType.GetField(),tmpFieldMap)
-			mapping.parseNestedType(tmpFieldMap,jsonPathChildren,*nestedType.Name)
-			nestedTypes = nestedType.GetNestedType()
-			setJsonPathChildren(nestedTypes,&jsonPathChildren,*nestedType.Name)
-		}
+func (mapping *Mapping) parseNestedTypes(nestedTypes []*descriptorpb.DescriptorProto, jsonPath []string) {
+	if nestedTypes == nil { //recursive
+		return
+	}
+	for _, nestedType := range nestedTypes {
+		tmpFieldMap := make(map[string]json.RawMessage)
+		mapping.parseFields(nestedType.GetField(), tmpFieldMap)
+		mapping.parseNestedType(tmpFieldMap, jsonPath, *nestedType.Name)
+		children := nestedType.GetNestedType()
+		jsonPathChildren := getJsonPathChildren(children, jsonPath, *nestedType.Name)
+		mapping.parseNestedTypes(children, jsonPathChildren) // recursive
 	}
 }
 
-func (mapping *Mapping) parseNestedType(tmpFieldMap map[string]json.RawMessage,jsonPathChildren []string,currentNodeName string) {
+func (mapping *Mapping) parseNestedType(tmpFieldMap map[string]json.RawMessage, jsonPathChildren []string, currentNodeName string) {
 	myJson, _ := json.Marshal(tmpFieldMap)
 	str := mapping.String()
-	str, _ = sjson.SetRaw(str, getJsonPath(jsonPathChildren,currentNodeName), string(myJson))
+	str, _ = sjson.SetRaw(str, getJsonPath(jsonPathChildren, currentNodeName), string(myJson))
 	json.Unmarshal([]byte(str), &mapping.fieldsMapping)
 }
 
-func setJsonPathChildren(nestedTypes []*descriptorpb.DescriptorProto,jsonPathChildren *[]string,currentNodeName string) {
-	if len(nestedTypes) == 0 { //if no child clean the json jsonPath child list
-		jsonPathChildren = nil
-	} else { //else append the json child node
-		*jsonPathChildren = append(*jsonPathChildren, currentNodeName)
+func getJsonPathChildren(childrenNestedTypes []*descriptorpb.DescriptorProto, jsonPath []string, currentNode string) []string {
+	if len(childrenNestedTypes) > 0 {
+		jsonPath = append(jsonPath, currentNode)
+	} else {
+		jsonPath = nil
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG JSON CHILDREN %+v\n", jsonPathChildren)
-
+	return jsonPath
 }
 
-func getJsonPath(jsonPathChildren []string,currentNodeName string) string {
+func getJsonPath(jsonPathFather []string, currentNodeName string) string {
 	jsonPath := currentNodeName
-	if len(jsonPathChildren) > 0 {
-		jsonPath = strings.Join(jsonPathChildren, ".") + "." + jsonPath
+	if len(jsonPathFather) > 0 {
+		jsonPath = strings.Join(jsonPathFather, ".") + "." + jsonPath
 	}
 	return jsonPath
 }

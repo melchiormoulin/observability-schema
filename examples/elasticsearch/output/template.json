@@ -38,14 +38,30 @@
               "doc_values": true,
               "norms": false
             },
-            "paf": {
-              "user_id_paf": {
+            "tak": {
+              "user_id_tak": {
+                "type": "keyword",
+                "store": false,
+                "index": true,
+                "doc_values": true,
+                "norms": false
+              },
+              "user_id_tak2": {
                 "type": "keyword",
                 "store": false,
                 "index": true,
                 "doc_values": true,
                 "norms": false
               }
+            }
+          },
+          "pof": {
+            "user_id_pof": {
+              "type": "keyword",
+              "store": false,
+              "index": true,
+              "doc_values": true,
+              "norms": false
             }
           }
         },
