@@ -12,6 +12,10 @@ This repo provides:
 1. A protobuf schema in order to define all fields names with their corresponding types for all applications.
 2. The tool is the protoc plugin that parse schema and generate an elasticsearch template mapping.
 
+QUICKSTART
+
+```docker run -v $(git rev-parse --show-toplevel)/examples/elasticsearch/input:/config -v $(git rev-parse --show-toplevel)/examples/elasticsearch/output:/output mlkitouch/observability-schema:0.2.0```
+
 How to use it ?
 With docker and make
 ```
