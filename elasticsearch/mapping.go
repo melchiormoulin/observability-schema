@@ -62,6 +62,7 @@ func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescripto
 		for _, messageType := range messageTypes {
 			if messageType.GetName() == "ObservabilitySchema" {
 				mapping.parseNestedTypes(messageType.GetNestedType(), []string{})
+				fmt.Fprintf(os.Stderr, "nested type root level\n")
 				mapping.parseFields(messageType.GetField(), mapping.fieldsMapping)
 			}
 		}
