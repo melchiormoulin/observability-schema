@@ -14,3 +14,7 @@ fmt:
 	go fmt ./...
 lint:
 	golint ./...
+docker-build:
+	./scripts/elasticsearch/docker-build.sh
+docker-run:
+	./scripts/elasticsearch/docker-run.sh
