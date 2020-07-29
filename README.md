@@ -13,6 +13,11 @@ This repo provides:
 2. The tool is the protoc plugin that parse schema and generate an elasticsearch template mapping.
 
 How to use it ?
-
+With docker and make
+```
+make docker-build
+make docker-run
+```
+OR 
 Install `golang` `protoc` and `make` and launch the `make` command.
 Look at the input and output examples of the plugin  in `examples/elasticsearch/`
