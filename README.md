@@ -16,12 +16,16 @@ QUICKSTART
 
 ```docker run -v $(git rev-parse --show-toplevel)/examples/elasticsearch/input:/config -v $(git rev-parse --show-toplevel)/examples/elasticsearch/output:/output mlkitouch/observability-schema:0.2.0```
 
-How to use it ?
+
+How to build it and run it from the repo ?
+
 With docker and make
 ```
 make docker-build
 make docker-run
 ```
+
 OR 
+
 Install `golang` `protoc` and `make` and launch the `make` command.
 Look at the input and output examples of the plugin  in `examples/elasticsearch/`
