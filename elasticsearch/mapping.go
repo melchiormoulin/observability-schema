@@ -97,6 +97,7 @@ func (mapping *Mapping) parseNestedType(tmpFieldMap map[string]json.RawMessage, 
 	myJson, _ := json.Marshal(tmpFieldMap)
 	str := mapping.String()
 	var err error
+	currentNodeName = currentNodeName +".properties"
 	str, err = sjson.SetRaw(str, getJsonPath(jsonPathChildren, currentNodeName), string(myJson))
 	if err!=nil {
 		panic(err)
