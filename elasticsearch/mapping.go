@@ -107,6 +107,7 @@ func (mapping *Mapping) parseNestedType(tmpFieldMap map[string]json.RawMessage, 
 
 func getJsonPathChildren(childrenNestedTypes []*descriptorpb.DescriptorProto, jsonPath []string, currentNode string) []string {
 	if len(childrenNestedTypes) > 0 {
+		currentNode = currentNode + ".properties"
 		jsonPath = append(jsonPath, currentNode)
 	} else {
 		jsonPath = nil
