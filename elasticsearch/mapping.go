@@ -49,7 +49,7 @@ func MappingInit(withTimestampField bool, formatIndent string, formatPrefix stri
 	return mapping
 }
 func (mapping *Mapping) addTimestampField() {
-	fieldDefinition := pb.ElasticsearchFieldString{Type: "date", DocValues: true, Index: true}
+	fieldDefinition := pb.ElasticsearchField{Type: "date", DocValues: true, Index: true}
 	fieldsDefinitionBytes, err := mapping.protoJSON.Marshal(&fieldDefinition) //Can't use the basic encoding/json because we can't use EmitUnpopulated: true with the basic json package.
 	if err!=nil {
 		panic(err)
