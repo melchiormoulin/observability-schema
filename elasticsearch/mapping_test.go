@@ -1,7 +1,6 @@
 package elasticsearch
 
 import (
-	"encoding/json"
 	pb "github.com/melchiormoulin/observability-schema/schema"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -31,21 +30,8 @@ func TestMappingInit(t *testing.T) {
 }
 func TestMappingInitWithTimestamp(t *testing.T) {
 	mapping := MappingInit(true, "  ", "")
-	if mapping.fieldsMapping["@timestamp"] != nil {
+	if mapping.fieldsMapping["@timestamp"] == nil {
 		t.Errorf("@timestamp key should be set")
-	}
-}
-
-func TestAddField(t *testing.T) {
-	mapping := MappingInit(true, "  ", "")
-	expectedFieldDefinitionStruct := pb.ElasticsearchFieldString{Type: "keyword", DocValues: true, Index: true}
-	mapping.addField("@timestamp", &expectedFieldDefinitionStruct)
-	fieldsDefinitionBytes, _ := mapping.protoJSON.Marshal(&expectedFieldDefinitionStruct)
-	expectedFieldDefinitionTmp := json.RawMessage(fieldsDefinitionBytes)
-	fieldDefinition, _ := mapping.fieldsMapping["@timestamp"].MarshalJSON()
-	expectedFieldDefinition, _ := expectedFieldDefinitionTmp.MarshalJSON()
-	if string(fieldDefinition) != string(expectedFieldDefinition) {
-		t.Errorf("@timestamp field definition should be present")
 	}
 }
 

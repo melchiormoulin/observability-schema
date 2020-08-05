@@ -10,9 +10,15 @@ import (
 
 const (
 	templatePath           = "examples/elasticsearch/input/mapping.template"
-	templateInParam        = "template_in"
+	templateInPathParam        = "template_in_path"
+	templateOutFilenameParam        = "template_out_filename"
 	templateOutputFileName = "template.json"
 )
+
+type Parameter struct {
+	TemplateInPath string
+	TemplateOutFilename string
+}
 
 func ReqInit(data []byte) *pluginpb.CodeGeneratorRequest {
 	req := &pluginpb.CodeGeneratorRequest{}
@@ -21,11 +27,10 @@ func ReqInit(data []byte) *pluginpb.CodeGeneratorRequest {
 	}
 	return req
 }
-func OutputStructSerialized(buffer *bytes.Buffer) []byte {
+func OutputStructSerialized(templateOutFilename string,buffer *bytes.Buffer) []byte {
 	resp := &pluginpb.CodeGeneratorResponse{}
 	bufferStr := buffer.String()
-	fileName := templateOutputFileName
-	outputFile := pluginpb.CodeGeneratorResponse_File{Name: &fileName, Content: &bufferStr}
+	outputFile := pluginpb.CodeGeneratorResponse_File{Name: &templateOutFilename, Content: &bufferStr}
 	resp.File = []*pluginpb.CodeGeneratorResponse_File{&outputFile}
 	output, err := proto.Marshal(resp)
 	if err != nil {
@@ -34,14 +39,20 @@ func OutputStructSerialized(buffer *bytes.Buffer) []byte {
 	return output
 }
 
-func TemplatePath(param string) (string,error) {
-	keyValueParam := strings.Split(param, "=")
-	template := templatePath
+func GetParameters(param string) (Parameter,error) {
+	parameter := Parameter{}
 	var err error
-	if len(keyValueParam) == 2 && keyValueParam[0] == templateInParam {
-		template = keyValueParam[1]
-	} else {
-		err=fmt.Errorf("templatein format : %v=thePath/my-input.template actually received : %v ",templateInParam,param)
+
+	keyValueParams := strings.Split(param, ";")
+	for _,keyValueParam := range keyValueParams {
+		tab := strings.Split(keyValueParam, "=")
+		if tab[0] == templateInPathParam {
+			parameter.TemplateInPath = tab[1]
+		} else if tab[0] == templateOutFilenameParam {
+			parameter.TemplateOutFilename = tab[1]
+		} else {
+			err=fmt.Errorf("bad parameter %v",param)
+		}
 	}
-	return template,err
+	return parameter,err
 }

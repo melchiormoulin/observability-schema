@@ -8,10 +8,10 @@ import (
 
 func TestTemplatePath(t *testing.T) {
 	expectedTemplatePath := "/my/input-template"
-	templatePath,_ := TemplatePath("template_in=" + expectedTemplatePath)
+	templatePath,_ := GetParameters("template_in=" + expectedTemplatePath)
 	assert.Equal(t, expectedTemplatePath, templatePath, "template path should be the same")
 }
 func TestTemplatePathBadFormat(t *testing.T) {
-	_,err := TemplatePath("mybadparam")
+	_,err := GetParameters("mybadparam")
 	assert.Errorf(t,err,"the template input param is not in the right format")
 }

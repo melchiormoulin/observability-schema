@@ -1,6 +1,6 @@
 BINARY_SUFFIX_NAME=es-mapping
 BINARY_NAME=protoc-gen-$(BINARY_SUFFIX_NAME) # if change, change the .gitignore
-ELASTICSEARCH_INPUT_GO_TEMPLATE='template_in=examples/elasticsearch/input/mapping.template'
+ELASTICSEARCH_INPUT_GO_TEMPLATE='template_in_path=examples/elasticsearch/input/mapping.template;template_out_filename=template.json'
 ELASTICSEARCH_OUTPUT_TEMPLATE_DIR='examples/elasticsearch/output/'
 SCHEMA_PATH_DIR=examples/elasticsearch/input
 SCHEMA_NAME=observabilitySchema.proto
