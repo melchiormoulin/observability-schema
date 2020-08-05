@@ -14,7 +14,7 @@ This repo provides:
 
 QUICKSTART
 
-```docker run -v $(git rev-parse --show-toplevel)/examples/elasticsearch/input:/config -v $(git rev-parse --show-toplevel)/examples/elasticsearch/output:/output mlkitouch/observability-schema:0.2.0```
+```docker run -v $(git rev-parse --show-toplevel)/examples/elasticsearch/input:/config -v $(git rev-parse --show-toplevel)/examples/elasticsearch/output:/output -e PARAMETERS="template_in_path=/config/mapping.template;template_out_filename=template.json" mlkitouch/observability-schema:0.5.0```
 
 
 How to build it and run it from the repo ?
