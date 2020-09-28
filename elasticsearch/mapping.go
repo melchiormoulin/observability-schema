@@ -19,7 +19,9 @@ type Mapping struct {
 	fieldsDefinition string                     // the json string of the mapping
 	formatIndent     string                     // format param for fieldsDefinition
 	formatPrefix     string                     //format param for fieldsDefinition
+	JsonDotPaths     []string					//all fields in jsonDotPaths ,use for index.query.default_field parameter, this parameter is to set fields to query when no fields are specified in the query.
 }
+
 
 //Only two types are allowed for now for elasticsearch
 func getElasticsearchType(options *descriptorpb.FieldOptions) proto.Message {
@@ -37,11 +39,13 @@ func getElasticsearchType(options *descriptorpb.FieldOptions) proto.Message {
 func MappingInit(withTimestampField bool, formatIndent string, formatPrefix string) Mapping {
 	protoJson := protojson.MarshalOptions{EmitUnpopulated: true, UseProtoNames: true}
 	fieldsMapping := make(map[string]json.RawMessage)
+	jsonDotPaths := make([]string,0)
 	mapping := Mapping{
 		fieldsMapping: fieldsMapping,
 		protoJSON:     protoJson,
 		formatIndent:  formatIndent,
 		formatPrefix:  formatPrefix,
+		JsonDotPaths: jsonDotPaths,
 	}
 	if withTimestampField {
 		mapping.addTimestampField()
@@ -61,35 +65,54 @@ func (mapping *Mapping) FieldsDefinition(protofile []*descriptorpb.FileDescripto
 		messageTypes := p.GetMessageType()
 		for _, messageType := range messageTypes {
 			if messageType.GetName() == "ObservabilitySchema" {
-				mapping.parseNestedTypes(messageType.GetNestedType(), []string{})
+				a := ""
+				mapping.parseNestedTypes(messageType.GetNestedType(), []string{},&a)
 				fmt.Fprintf(os.Stderr, "nested type root level\n")
-				mapping.parseFields(messageType.GetField(), mapping.fieldsMapping)
+
+				mapping.parseFields(messageType.GetField(), mapping.fieldsMapping,&a)
 			}
 		}
 	}
 	return mapping.String()
 }
 
-func (mapping *Mapping) parseFields(fields []*descriptorpb.FieldDescriptorProto, jsonKv map[string]json.RawMessage) {
+func (mapping *Mapping) parseFields(fields []*descriptorpb.FieldDescriptorProto, jsonKv map[string]json.RawMessage,myTmpJsonPath *string) {
 	for _, field := range fields {
+		myTmpJsonPath3 := ""
+		if *myTmpJsonPath ==""{
+			myTmpJsonPath3 =  *field.Name
+
+		} else {
+			myTmpJsonPath3 = *myTmpJsonPath+"."+ *field.Name
+
+		}
+		mapping.JsonDotPaths = append(mapping.JsonDotPaths,myTmpJsonPath3)
+		fmt.Fprintf(os.Stderr, "tmpJsonPath %+v \n",myTmpJsonPath3)
+
 		fieldsDefinitionBytes := mapping.parseField(field)
 		jsonKv[*field.Name] = fieldsDefinitionBytes
 		fmt.Fprintf(os.Stderr, "field %+v : %+v\n", *field.Name, string(fieldsDefinitionBytes))
 	}
 }
 
-func (mapping *Mapping) parseNestedTypes(nestedTypes []*descriptorpb.DescriptorProto, jsonPath []string) {
+func (mapping *Mapping) parseNestedTypes(nestedTypes []*descriptorpb.DescriptorProto, jsonPath []string,myTmpJsonPath *string) {
 	if nestedTypes == nil { //recursive
 		return
 	}
 	for _, nestedType := range nestedTypes {
 		fmt.Fprintf(os.Stderr, "nested type %+v \n", *nestedType.Name)
+		myTmpJsonPath2:=""
+		if *myTmpJsonPath == "" {
+			myTmpJsonPath2 = *nestedType.Name
+		} else {
+			myTmpJsonPath2 = *myTmpJsonPath+ "." + *nestedType.Name
+		}
 		tmpFieldMap := make(map[string]json.RawMessage)
-		mapping.parseFields(nestedType.GetField(), tmpFieldMap)
+		mapping.parseFields(nestedType.GetField(), tmpFieldMap,&myTmpJsonPath2)
 		mapping.parseNestedType(tmpFieldMap, jsonPath, *nestedType.Name)
 		children := nestedType.GetNestedType()
 		jsonPathChildren := getJsonPathChildren(children, jsonPath, *nestedType.Name)
-		mapping.parseNestedTypes(children, jsonPathChildren) // recursive
+		mapping.parseNestedTypes(children, jsonPathChildren,&myTmpJsonPath2) // recursive
 	}
 }
 
@@ -98,6 +121,7 @@ func (mapping *Mapping) parseNestedType(tmpFieldMap map[string]json.RawMessage, 
 	str := mapping.String()
 	var err error
 	currentNodeName = currentNodeName +".properties"
+	//TODO: refacto to use json Path calculated for ( add the properties between . char )
 	str, err = sjson.SetRaw(str, getJsonPath(jsonPathChildren, currentNodeName), string(myJson))
 	if err!=nil {
 		panic(err)

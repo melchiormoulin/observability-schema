@@ -5,6 +5,11 @@
   "priority": 0,
   "version": 0,
   "template": {
+    "settings": {
+      "query": {
+        "default_field":        ["fields.test","tok.fake_tok","tik.user_id_tik","tik.tok.user_id_tok","tik.tok.tak.user_id_tak","tik.tok.tak.user_id_tak2","tik.pof.user_id_pof","user_id","port"]
+      }
+    },
     "mappings": {
       "properties":
       {

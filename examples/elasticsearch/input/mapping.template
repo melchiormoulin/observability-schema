@@ -5,6 +5,11 @@
   "priority": 0,
   "version": 0,
   "template": {
+    "settings": {
+      "query": {
+        "default_field":  {{ $.jsonkeys | indent 6 }}
+      }
+    },
     "mappings": {
       "properties":
 {{ $.fields | indent 6 }}

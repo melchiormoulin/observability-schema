@@ -21,6 +21,6 @@ func main() {
 	fmt.Fprintf(os.Stderr, "generating for file %+v with params %+v\n", input.FileToGenerate, input.GetParameter())
 	mapping := elasticsearch.MappingInit(true, "  ", "")
 	fieldsDefinition := mapping.FieldsDefinition(input.GetProtoFile())
-	buffer := elasticsearch.RenderTemplate(parameters.TemplateInPath, fieldsDefinition)
+	buffer := elasticsearch.RenderTemplate(parameters.TemplateInPath, fieldsDefinition,mapping.JsonDotPaths)
 	os.Stdout.Write(protoplugin.OutputStructSerialized(parameters.TemplateOutFilename,buffer))
 }
